@@ -1,0 +1,1 @@
+# interactive inference script for testing the trained model on the banking intent dataset

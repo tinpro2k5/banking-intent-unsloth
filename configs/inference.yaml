@@ -1,0 +1,3 @@
+model_path: "checkpoints/banking-intent"
+label_map: "configs/label_map.json"
+max_seq_length: 128

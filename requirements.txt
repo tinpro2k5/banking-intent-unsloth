@@ -1,0 +1,7 @@
+unsloth
+datasets
+scikit-learn
+pandas
+pyyaml
+transformers
+torch

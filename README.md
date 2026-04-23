@@ -2,8 +2,19 @@
 
 ## Setup
 ```bash
+# 1. Install PyTorch with CUDA (must do first)
+pip install torch==2.7.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 
+# 2. Install other dependencies
 pip install -r requirements.txt
 ```
+
+    Optional – Install memory-efficient attention (optional)
+```bash
+pip install xformers==0.0.27 --no-deps
+```
+
+Notes:
+- Do NOT include torch or xformers in requirements.txt to avoid version conflicts.
 
 ## Prepare Data
 ```bash

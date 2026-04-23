@@ -1,9 +1,0 @@
-{
-  "model_name": "unsloth/llama-3-8b-bnb-4bit",
-  "num_samples": 4203,
-  "p50": 13,
-  "p95": 42,
-  "p99": 55,
-  "max": 91,
-  "recommended_max_seq_length": 64
-}

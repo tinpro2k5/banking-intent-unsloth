@@ -28,18 +28,21 @@ class IntentClassification:
         self.text_streamer = TextStreamer(self.tokenizer, skip_prompt=True)
 
     def __call__(self, message: str) -> str:
- 
+        messages = [
+            {"role": "user", "content": f"Classify the intent: {message}"}
+        ]
+        
         prompt = self.tokenizer.apply_chat_template(
-            message,
-            add_generation_prompt=True,
-            return_tensors = "pt"
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
         )
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to("cuda")
         outputs = self.model.generate(**inputs, max_new_tokens=20, use_cache=True)
-        decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        # Extract intent from after "Intent:"
-        predicted = decoded.split("Intent:")[-1].strip().split("\n")[0]
+        decoded = self.tokenizer.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+        # Model outputs intent string directly
+        predicted = decoded.strip().split("\n")[0]
         
         input_ids = self.tokenizer.apply_chat_template(
             message,

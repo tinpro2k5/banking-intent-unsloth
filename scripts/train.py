@@ -3,7 +3,7 @@ import shutil
 from datetime import datetime
 from datasets import Dataset
 from unsloth import FastLanguageModel
-from transformers import TrainingArguments
+from transformers import TrainingArguments, EarlyStoppingCallback
 from trl import SFTTrainer
 from unsloth.chat_templates import get_chat_template
 from pathlib import Path
@@ -94,11 +94,11 @@ trainer = SFTTrainer(
         per_device_train_batch_size=cfg["batch_size"],
         gradient_accumulation_steps=cfg["gradient_accumulation_steps"],
         num_train_epochs=cfg["num_epochs"],
-        learning_rate=cfg["learning_rate"],
+        learning_rate=float(cfg["learning_rate"]),
         optim=cfg["optimizer"],
         output_dir=str(output_dir),
         save_strategy=cfg["save_strategy"],
-        evaluation_strategy=cfg["evaluation_strategy"],
+        eval_strategy=cfg["eval_strategy"],
         save_total_limit=cfg["save_total_limit"],
         load_best_model_at_end=cfg["load_best_model_at_end"],
         metric_for_best_model=cfg["metric_for_best_model"],
@@ -110,6 +110,10 @@ trainer = SFTTrainer(
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),
         report_to="none",
+        callback= EarlyStoppingCallback(
+            early_stopping_patience=cfg["early_stopping_patience"],
+            early_stopping_threshold=cfg["early_stopping_threshold"]
+        )
     ),
 )
 
@@ -119,8 +123,8 @@ from unsloth.chat_templates import train_on_responses_only
 # which is ideal for classification tasks where the response (label) is the main learning signal.
 trainer = train_on_responses_only(
     trainer,
-    instruction_part = "<|start_header_id|>user<|end_header_id|>\n\n",
-    response_part = "<|start_header_id|>assistant<|end_header_id|>\n\n",
+    instruction_part = cfg["instruction_part"],
+    response_part = cfg["response_part"],
 )
 
 

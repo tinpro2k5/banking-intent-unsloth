@@ -26,21 +26,52 @@ python scripts/preprocess_data.py
 bash train.sh
 ```
 
+## Evaluate
+The evaluation script compares the fine-tuned checkpoint against the base model on the validation split and reports both accuracies.
+
+How it works:
+- Loads the configuration from `configs/inference.yaml`
+- Resolves a model checkpoint automatically from the latest timestamped run under `checkpoints/`
+- Applies the same chat template used during training
+- Uses `sample_data/val.csv` by default, but you can override the split when needed
+- Generates one intent label for the fine-tuned checkpoint and one for the base model
+- Compares both against the ground-truth labels and prints the accuracy gap
+
+Useful modes:
+- `--split val|test|train` selects which split to evaluate, default is `val`
+- `--best-from-run` uses the best checkpoint recorded in `trainer_state.json`
+- `--model-path ...` evaluates a specific checkpoint or Hugging Face model id
+
+Examples:
+```bash
+# Evaluate the latest run on the validation split and compare it with the base model
+bash run_evaluate.sh
+
+# Evaluate the latest run on the test split
+bash run_evaluate.sh --split test
+
+# Evaluate a specific run directory and use its best checkpoint
+bash run_evaluate.sh --run-dir checkpoints/20260424_231500 --best-from-run
+
+# Evaluate the base model directly
+bash run_evaluate.sh --model-path unsloth/Llama-3.2-3B-Instruct
+```
+
 ## Inference
 ```bash
 bash inference.sh
 ```
 
 ## Dataset
-BANKING77 — 77 banking intent classes. We sample 20 classes for this project.
+BANKING77 — 77 banking intent classes. This project fine-tunes on a subset of the full label space.
 
 ## Model
-Fine-tuned LLaMA-3-8B with 4-bit quantization via Unsloth + LoRA.
+Fine-tuned LLaMA-3-3B Instruct with 4-bit quantization via Unsloth + LoRA.
 
 ## Results
 | Split | Accuracy |
 |-------|----------|
-| Test  | XX%      |
+| Val   | See evaluate output |
 
 
 
@@ -50,8 +81,8 @@ Due to size limitations, the trained model checkpoint is not included in this re
 
 You can either:
 
-Train the model using train.py
-Or use the sample checkpoint provided via Google Drive (link below)
+Train the model using `scripts/train.py`
+Or use the sample checkpoint generated under `checkpoints/<timestamp>/`
 
 
 ## Demo Video

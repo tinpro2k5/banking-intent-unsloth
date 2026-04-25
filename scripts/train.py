@@ -77,9 +77,9 @@ for i in range(3):
 ###################################################################
 
 
-
-    
-output_dir = (REPO_ROOT / cfg["output_dir"]).resolve()
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+base_output_dir = (REPO_ROOT / cfg["output_dir"]).resolve()
+output_dir = base_output_dir / timestamp
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Training
@@ -150,3 +150,4 @@ shutil.copy2(CONFIG_DIR / cfg["label_text_map"], output_dir / "label_text_map.js
 print("✅ Training done. Checkpoint and metadata saved to:", output_dir)
 # model.push_to_hub("your_name/lora_model", token = "...") # Online saving
 # tokenizer.push_to_hub("your_name/lora_model", token = "...") # Online saving
+

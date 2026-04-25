@@ -106,11 +106,9 @@ label_length_stats = compute_token_length_stats(
     tokenizer=tokenizer
 )
 
-with open(CONFIG_DIR / "prompt_text_stats.json", "w", encoding="utf-8") as f:
-    json.dump(prompt_text_length_stats, f, indent=2)
-
-with open(CONFIG_DIR / "label_text_stats.json", "w", encoding="utf-8") as f:
-    json.dump(label_length_stats, f, indent=2)
+print("Prompt stats:", prompt_text_length_stats)
+print("Label stats:", label_length_stats)
+print("Label max token length (strict):", label_length_stats["max"])
 
 train_df, temp_df = train_test_split(
     df_subset,

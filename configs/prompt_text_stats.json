@@ -1,9 +1,0 @@
-{
-  "model_name": "unsloth/Llama-3.2-3B-Instruct",
-  "num_samples": 7124,
-  "p50": 34,
-  "p95": 61,
-  "p99": 75,
-  "max": 111,
-  "recommended_max_length": 96
-}

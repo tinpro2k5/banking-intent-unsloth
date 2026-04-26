@@ -90,6 +90,12 @@ trainer = SFTTrainer(
     eval_dataset=val_dataset,
     dataset_text_field="text",
     max_seq_length=cfg["max_seq_length"],
+    callbacks=[
+        EarlyStoppingCallback(
+            early_stopping_patience=cfg["early_stopping_patience"],
+            early_stopping_threshold=cfg["early_stopping_threshold"],
+        )
+    ],
     args=TrainingArguments(
         per_device_train_batch_size=cfg["batch_size"],
         gradient_accumulation_steps=cfg["gradient_accumulation_steps"],
@@ -110,10 +116,6 @@ trainer = SFTTrainer(
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),
         report_to="none",
-        callback= EarlyStoppingCallback(
-            early_stopping_patience=cfg["early_stopping_patience"],
-            early_stopping_threshold=cfg["early_stopping_threshold"]
-        )
     ),
 )
 

@@ -53,4 +53,4 @@ response_part: "<|start_header_id|>assistant<|end_header_id|>\n\n"
 
 
 label_text_map: "label_text_map.json"
-output_dir: "checkpoints"
+output_dir: "checkpoints"

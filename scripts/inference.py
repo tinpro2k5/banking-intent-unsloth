@@ -38,8 +38,8 @@ class IntentClassification:
 
         label_map_path = resolve_path(cfg["label_text_map"])
         with open(label_map_path) as f:
-            label2id = json.load(f)
-        self.id2label = {v: k for k, v in label2id.items()}
+            id2label_raw = json.load(f)
+        self.id2label = {int(k): v for k, v in id2label_raw.items()}
 
         adapter_path = resolve_path(cfg["adapter_path"])
         if not adapter_path.exists():

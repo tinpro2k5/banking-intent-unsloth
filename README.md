@@ -68,6 +68,20 @@ BANKING77 — 77 banking intent classes. This project fine-tunes on a subset of 
 ## Model
 Fine-tuned LLaMA-3-3B Instruct with 4-bit quantization via Unsloth + LoRA.
 
+### Hyperparameters & Training Details
+As per the project requirements, the following hyperparameters and techniques were used during fine-tuning (configured in `configs/train.yaml`):
+
+- **Batch Size:** `2` (with gradient accumulation steps = 8)
+- **Learning Rate:** `2e-4` (Cosine scheduler, 50 warmup steps)
+- **Optimizer:** `adamw_8bit`
+- **Number of Epochs:** `3`
+- **Maximum Sequence Length:** `128`
+- **Regularization & Techniques:** 
+  - Weight Decay: `0.01`
+  - LoRA specific: `r=16`, `alpha=32`, `dropout=0`
+  - Early Stopping: Patience of `3` epochs
+  - Instruction tuning: Trained only on assistant responses (`train_on_responses_only` unsloth utility)
+
 ## Results
 | Split | Accuracy |
 |-------|----------|

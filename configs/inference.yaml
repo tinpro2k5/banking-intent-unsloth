@@ -8,4 +8,4 @@ chat_template: "llama-3"
 dtype: null # Defaults to None; use torch.float16 or torch.bfloat16 for newer GPUs.
 # Same as train.yaml; ensure consistency between training and inference configs.
 
-base_model_max_seq_length: 640 # for evaluation, pretrained models use system prompts that can be long
+base_model_max_seq_length: 512 # for evaluation, pretrained models use system prompts that can be long

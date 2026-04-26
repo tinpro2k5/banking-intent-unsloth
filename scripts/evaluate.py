@@ -254,7 +254,8 @@ def evaluate_model(
     use_base_prompt: bool,
 ):
     true_labels = [id2label[int(x)] for x in df["label"].tolist()]
-    valid_labels = set(id2label.values())
+    # Use only the subset of intents present in the evaluation dataset
+    valid_labels = set(true_labels)
     preds = []
 
     total = len(df)

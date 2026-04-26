@@ -1,4 +1,12 @@
 *.pyc
-__pycache__/*
-checkpoints/*
-unsloth_compiled_cache/*
+__pycache__/
+
+# Ignore checkpoint subdirectories only
+checkpoint-*/
+
+unsloth_compiled_cache/
+.DS_Store
+*.egg-info/
+dist/
+build/
+

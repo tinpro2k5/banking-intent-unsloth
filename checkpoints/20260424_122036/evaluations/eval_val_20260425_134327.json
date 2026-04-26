@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-04-25T13:43:27.537992",
+  "run_context": {
+    "args": {
+      "config": "C:\\Users\\letru\\OneDrive\\Desktop\\NLP Application\\Lab\\Ex2\\banking-intent-unsloth\\configs\\inference.yaml",
+      "split": "val",
+      "model_path": null,
+      "run_dir": null,
+      "best_from_run": false
+    },
+    "infer_cfg": {
+      "base_model": "unsloth/Llama-3.2-3B-Instruct",
+      "adapter_path": "checkpoints/20260424_122036",
+      "label_text_map": "label_text_map.json",
+      "max_seq_length": 128,
+      "load_in_4bit": true,
+      "max_new_tokens": 16,
+      "chat_template": "llama-3",
+      "dtype": null,
+      "base_model_max_seq_length": 640
+    },
+    "resolved": {
+      "data_file": "C:\\Users\\letru\\OneDrive\\Desktop\\NLP Application\\Lab\\Ex2\\banking-intent-unsloth\\sample_data\\val.csv",
+      "split": "val",
+      "n_samples": 1069,
+      "fine_tuned_model": "C:\\Users\\letru\\OneDrive\\Desktop\\NLP Application\\Lab\\Ex2\\banking-intent-unsloth\\checkpoints\\20260424_122036\\checkpoint-936",
+      "base_model": "unsloth/Llama-3.2-3B-Instruct",
+      "prompt_mode": {
+        "fine_tuned_use_base_prompt": false,
+        "base_use_base_prompt": true
+      },
+      "max_seq_length": {
+        "fine_tuned": 128,
+        "base": 640
+      }
+    }
+  },
+  "metrics": {
+    "fine_tuned_accuracy": 0.9522918615528532,
+    "base_accuracy": 0.3816651075771749,
+    "delta_ft_minus_base": 0.5706267539756782,
+    "fine_tuned_correct": 1018,
+    "base_correct": 408
+  }
+}

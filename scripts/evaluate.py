@@ -282,9 +282,7 @@ def evaluate_model(
     valid_labels = set(true_labels)
     preds = []
 
-    total = len(df)
-    print(f"[progress] Evaluating {total} samples...")
-    for index, text in enumerate(tqdm(df["text"].tolist(), desc="evaluating", unit="sample"), start=1):
+    for text in tqdm(df["text"].tolist(), desc="evaluating", unit="sample"):
         raw_pred = predict_label(
             model,
             tokenizer,
@@ -294,8 +292,6 @@ def evaluate_model(
             use_base_prompt=use_base_prompt,
         )
         preds.append(normalize_prediction(raw_pred, valid_labels))
-        if index % 25 == 0 or index == total:
-            print(f"[progress] {index}/{total} samples done")
 
     acc = accuracy_score(true_labels, preds)
     return acc, preds, true_labels

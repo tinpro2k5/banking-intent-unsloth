@@ -10,3 +10,5 @@ unsloth_compiled_cache/
 dist/
 build/
 
+huggingface_tokenizers_cache/
+state.db

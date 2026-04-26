@@ -45,16 +45,16 @@ Useful modes:
 Examples:
 ```bash
 # Evaluate the latest run on the validation split and compare it with the base model
-bash run_evaluate.sh
+bash evaluate.sh
 
 # Evaluate the latest run on the test split
-bash run_evaluate.sh --split test
+bash evaluate.sh --split test
 
 # Evaluate a specific run directory and use its best checkpoint
-bash run_evaluate.sh --run-dir checkpoints/20260424_231500 --best-from-run
+bash evaluate.sh --run-dir checkpoints/20260424_231500 --best-from-run
 
 # Evaluate the base model directly
-bash run_evaluate.sh --model-path unsloth/Llama-3.2-3B-Instruct
+bash evaluate.sh --model-path unsloth/Llama-3.2-3B-Instruct
 ```
 
 ## Inference

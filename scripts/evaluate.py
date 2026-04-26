@@ -133,6 +133,11 @@ def find_latest_run(adapter_root: Path) -> Path:
     return max(run_dirs, key=lambda p: p.stat().st_mtime)
 
 
+def is_adapter_run_dir(path: Path) -> bool:
+    """Return True when path looks like a saved adapter run directory."""
+    return (path / "adapter_config.json").exists() and (path / "tokenizer_config.json").exists()
+
+
 def resolve_model_path(args, infer_cfg) -> str:
     if args.model_path:
         # Allow either a local path or a Hugging Face model id.
@@ -148,7 +153,20 @@ def resolve_model_path(args, infer_cfg) -> str:
             "Check configs/inference.yaml -> adapter_path"
         )
 
-    run_dir = resolve_path(args.run_dir) if args.run_dir else find_latest_run(adapter_root)
+    if args.run_dir:
+        run_dir = resolve_path(args.run_dir)
+    else:
+        # Support both adapter_path styles:
+        # 1) a parent directory containing many timestamped runs
+        # 2) a specific run directory containing adapter files
+        run_dir = adapter_root if is_adapter_run_dir(adapter_root) else find_latest_run(adapter_root)
+
+    if run_dir.name == "evaluations":
+        raise ValueError(
+            "Resolved run directory points to an evaluations folder, not a model folder. "
+            "Use --run-dir checkpoints/<timestamp> or set configs/inference.yaml -> adapter_path "
+            "to a run directory containing adapter_config.json."
+        )
 
     if args.best_from_run:
         trainer_state_path = run_dir / "trainer_state.json"
@@ -165,7 +183,13 @@ def resolve_model_path(args, infer_cfg) -> str:
                     return str(maybe_relative.resolve())
         print(f"[warn] Could not resolve best checkpoint from {trainer_state_path}; using run dir.")
 
-    return str(run_dir.resolve())
+    if is_adapter_run_dir(run_dir):
+        return str(run_dir.resolve())
+
+    raise FileNotFoundError(
+        f"Could not find adapter files in resolved run directory: {run_dir}. "
+        "Expected files like adapter_config.json and tokenizer_config.json."
+    )
 
 
 def load_model_and_tokenizer(model_name: str, infer_cfg: dict, max_seq_length: int):

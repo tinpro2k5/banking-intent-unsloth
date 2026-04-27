@@ -108,13 +108,8 @@ As per the project requirements, the following hyperparameters and techniques we
 
 Model Checkpoint
 
-Due to size limitations, the trained model checkpoint is not included in this repository.
-
-You can either:
-
-Train the model using `scripts/train.py`
-Or use the sample checkpoint generated under `checkpoints/<timestamp>/`
 
 
 ## Demo Video
 [Watch here](YOUR_GOOGLE_DRIVE_LINK)
+- Preprocessing generates `configs/used_label_text_map.json`, and each checkpoint copies that file so inference and evaluation use the trained label subset instead of the full BANKING77 label space.

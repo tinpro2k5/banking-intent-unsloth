@@ -22,6 +22,7 @@ with open(CONFIG_DIR / "train.yaml") as f:
 with open(CONFIG_DIR / cfg["label_text_map"]) as f:
     label_text_map = json.load(f)
 id2label = {int(k): v for k, v in label_text_map.items()}
+used_label_map_name = cfg.get("used_label_text_map", "used_label_text_map.json")
 
 # Load model & tokenizer with Unsloth
 model, tokenizer = FastLanguageModel.from_pretrained(
@@ -54,10 +55,14 @@ train_df = pd.read_csv(DATA_DIR / cfg["train_data"] )
 val_df = pd.read_csv(DATA_DIR / cfg["val_data"])
 test_df  = pd.read_csv(DATA_DIR / cfg["test_data"] )
 
+train_label_ids = sorted(pd.unique(train_df["label"]).tolist())
+
 
 train_df["label"] = train_df["label"].map(id2label)
 val_df["label"] = val_df["label"].map(id2label)
 test_df["label"] = test_df["label"].map(id2label)
+
+used_label_text_map = {str(int(label_id)): id2label[int(label_id)] for label_id in train_label_ids}
 
 train_dataset = Dataset.from_pandas(pd.DataFrame(formatting_prompts_func(train_df, tokenizer=tokenizer)))
 test_dataset = Dataset.from_pandas(pd.DataFrame(formatting_prompts_func(test_df, tokenizer=tokenizer)))
@@ -81,6 +86,9 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 base_output_dir = (REPO_ROOT / cfg["output_dir"]).resolve()
 output_dir = base_output_dir / timestamp
 output_dir.mkdir(parents=True, exist_ok=True)
+
+with open(output_dir / used_label_map_name, "w", encoding="utf-8") as f:
+    json.dump(used_label_text_map, f, indent=2, ensure_ascii=False)
 
 # Training
 trainer = SFTTrainer(

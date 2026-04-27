@@ -14,6 +14,7 @@ NUM_INTENTS = 36
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = REPO_ROOT / "configs"
 DATA_DIR = REPO_ROOT / "sample_data"
+LABEL_TEXT_MAP_PATH = CONFIG_DIR / "label_text_map.json"
 
 
 PARQUET_URLS = {
@@ -22,10 +23,10 @@ PARQUET_URLS = {
 }
 
 
-with open(CONFIG_DIR / "preprocess.yaml") as f:
+with open(CONFIG_DIR / "train.yaml") as f:
     cfg = yaml.safe_load(f)
 
-with open(CONFIG_DIR / cfg["label_text_map"]) as f:
+with open(LABEL_TEXT_MAP_PATH) as f:
     label_text_map = json.load(f)
 id2label = {int(k): v for k, v in label_text_map.items()}
 
@@ -77,6 +78,11 @@ selected_labels = (
 )
 df_subset = df_all[df_all["label"].isin(selected_labels)].copy()
 
+used_label_text_map = {
+    int(label_id): id2label[int(label_id)]
+    for label_id in selected_labels
+}
+
 
 tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"], use_fast=True)
 tokenizer = get_chat_template(tokenizer, chat_template=cfg["chat_template"])
@@ -127,6 +133,9 @@ val_df, test_df = train_test_split(
 train_df.to_csv(DATA_DIR / "train.csv", index=False)
 val_df.to_csv(DATA_DIR / "val.csv", index=False)
 test_df.to_csv(DATA_DIR / "test.csv", index=False)
+
+with open(CONFIG_DIR / "used_label_text_map.json", "w", encoding="utf-8") as f:
+    json.dump(used_label_text_map, f, indent=2, ensure_ascii=False)
 
 print(
     f"Train: {len(train_df)}, Val: {len(val_df)}, Test: {len(test_df)}, Intents: {NUM_INTENTS}. "

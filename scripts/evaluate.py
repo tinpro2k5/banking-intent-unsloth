@@ -192,6 +192,26 @@ def resolve_model_path(args, infer_cfg) -> str:
     )
 
 
+def resolve_used_label_map_path(model_ref: str, infer_cfg: dict) -> Path:
+    model_path = Path(model_ref)
+    used_label_name = infer_cfg.get("used_label_text_map", "used_label_text_map.json")
+    used_label_file = Path(used_label_name).name
+    candidates = []
+    if model_path.exists():
+        target_dir = model_path if model_path.is_dir() else model_path.parent
+        # Always check checkpoint-local subset map first.
+        candidates.append(target_dir / used_label_file)
+        # Backward-compatible path in case older checkpoints used nested dirs.
+        candidates.append(target_dir / used_label_name)
+    candidates.append(resolve_path(used_label_name))
+    candidates.append(resolve_path(infer_cfg["label_text_map"]))
+
+    for item in candidates:
+        if item.exists():
+            return item
+    return resolve_path(infer_cfg["label_text_map"])
+
+
 def load_model_and_tokenizer(model_name: str, infer_cfg: dict, max_seq_length: int):
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=model_name,
@@ -206,7 +226,28 @@ def load_model_and_tokenizer(model_name: str, infer_cfg: dict, max_seq_length: i
     return model, tokenizer
 
 
-def normalize_prediction(pred: str, valid_labels):
+def normalize_prediction_ft(pred: str, valid_labels) -> str:
+    """Normalization for fine-tuned model — mirrors inference.py exactly.
+    Only accepts an exact match (case-insensitive). Anything else is
+    'unknown_intent', consistent with the interactive inference pipeline.
+    """
+    raw = pred.strip()
+    # Exact match
+    if raw in valid_labels:
+        return raw
+    # Case-insensitive exact match
+    lut = {x.lower(): x for x in valid_labels}
+    if raw.lower() in lut:
+        return lut[raw.lower()]
+    # No match — same behaviour as inference.py
+    return "unknown_intent"
+
+
+def normalize_prediction_base(pred: str, valid_labels) -> str:
+    """Normalization for base model zero-shot output.
+    Applies progressive fallback because the base model may wrap
+    the label with extra text or punctuation.
+    """
     raw = pred.strip()
     if raw in valid_labels:
         return raw
@@ -222,14 +263,16 @@ def normalize_prediction(pred: str, valid_labels):
     if first.lower() in lut:
         return lut[first.lower()]
 
-    # Fallback: pick first label that appears in the output.
-    for label in valid_labels:
+    # Fallback: pick first label that appears anywhere in the output.
+    for label in sorted(valid_labels):  # sorted for determinism
         if label.lower() in lowered:
             return label
     return raw
 
 
 def predict_label(model, tokenizer, text: str, max_new_tokens: int, valid_labels, use_base_prompt: bool) -> str:
+    # use_base_prompt=True  -> base model: full prompt with system message + label list
+    # use_base_prompt=False -> fine-tuned model: match the exact training prompt (no label list, no system message)
     if use_base_prompt:
         labels_block = "\n".join(f"- {x}" for x in sorted(valid_labels))
         system_prompt = (
@@ -248,7 +291,11 @@ def predict_label(model, tokenizer, text: str, max_new_tokens: int, valid_labels
             {"role": "user", "content": user_prompt},
         ]
     else:
-        messages = [{"role": "user", "content": f"Classify the intent: {text}"}]
+        # Mirror exactly the training prompt from utils.py:formatting_prompts_func
+        # No system message, no label list — keeps input short and consistent with training.
+        messages = [
+            {"role": "user", "content": f"Classify the intent: {text}"},
+        ]
 
     prompt = tokenizer.apply_chat_template(
         messages,
@@ -276,12 +323,13 @@ def evaluate_model(
     id2label: dict,
     max_new_tokens: int,
     use_base_prompt: bool,
+    allowed_labels,
 ):
     true_labels = [id2label[int(x)] for x in df["label"].tolist()]
-    # Use only the subset of intents present in the evaluation dataset
-    valid_labels = set(true_labels)
+    valid_labels = set(allowed_labels)
     preds = []
 
+    normalize = normalize_prediction_base if use_base_prompt else normalize_prediction_ft
     for text in tqdm(df["text"].tolist(), desc="evaluating", unit="sample"):
         raw_pred = predict_label(
             model,
@@ -291,7 +339,7 @@ def evaluate_model(
             valid_labels=valid_labels,
             use_base_prompt=use_base_prompt,
         )
-        preds.append(normalize_prediction(raw_pred, valid_labels))
+        preds.append(normalize(raw_pred, valid_labels))
 
     acc = accuracy_score(true_labels, preds)
     return acc, preds, true_labels
@@ -305,6 +353,7 @@ def evaluate_checkpoint(
     id2label: dict,
     max_new_tokens: int,
     use_base_prompt: bool,
+    allowed_labels,
 ):
     start = time.perf_counter()
     model, tokenizer = load_model_and_tokenizer(model_ref, infer_cfg, max_seq_length=max_seq_length)
@@ -317,6 +366,7 @@ def evaluate_checkpoint(
             id2label,
             max_new_tokens=max_new_tokens,
             use_base_prompt=use_base_prompt,
+            allowed_labels=allowed_labels,
         )
     finally:
         del model
@@ -372,18 +422,25 @@ def main():
         label_text_map = json.load(f)
     id2label = {int(k): v for k, v in label_text_map.items()}
 
+    ft_model_ref = resolve_model_path(args, infer_cfg)
+
+    used_label_map_path = resolve_used_label_map_path(ft_model_ref, infer_cfg)
+    with open(used_label_map_path, "r", encoding="utf-8") as f:
+        used_label_text_map = json.load(f)
+    allowed_labels = set(used_label_text_map.values())
+
     data_file = DATA_DIR / f"{args.split}.csv"
     if not data_file.exists():
         raise FileNotFoundError(f"Dataset split not found: {data_file}")
     df = pd.read_csv(data_file)
 
-    ft_model_ref = resolve_model_path(args, infer_cfg)
     base_model_ref = infer_cfg["base_model"]
     ft_max_seq_length = int(infer_cfg["max_seq_length"])
     base_max_seq_length = int(infer_cfg.get("base_model_max_seq_length", ft_max_seq_length))
 
     print(f"[info] Evaluation split: {args.split} -> {data_file}")
     print(f"[info] Fine-tuned model: {ft_model_ref}")
+    print(f"[info] Used label subset map: {used_label_map_path}")
     print(f"[info] Base model: {base_model_ref}")
     print(f"[info] max_seq_length (fine-tuned): {ft_max_seq_length}")
     print(f"[info] max_seq_length (base): {base_max_seq_length}")
@@ -400,6 +457,7 @@ def main():
         id2label,
         max_new_tokens=int(infer_cfg["max_new_tokens"]),
         use_base_prompt=ft_use_base_prompt,
+        allowed_labels=allowed_labels,
     )
 
     base_acc, base_preds, _, base_timing = evaluate_checkpoint(
@@ -410,6 +468,7 @@ def main():
         id2label,
         max_new_tokens=int(infer_cfg["max_new_tokens"]),
         use_base_prompt=base_use_base_prompt,
+        allowed_labels=allowed_labels,
     )
 
     ft_correct = sum(p == t for p, t in zip(ft_preds, true_labels))

@@ -3,10 +3,10 @@ import json
 import math
 from pathlib import Path
 
+from unsloth.chat_templates import get_chat_template
 import pandas as pd, yaml
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
-from unsloth.chat_templates import get_chat_template
 from utils import formatting_prompts_func
 
 SEED = 42  # for random state in train_test_split

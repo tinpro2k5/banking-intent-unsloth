@@ -26,6 +26,23 @@ python scripts/preprocess_data.py
 bash train.sh
 ```
 
+### Known Environment Issues
+
+This training setup is currently most reliable on a single modern GPU.
+
+- **Single GPU is the recommended path.** The current codebase uses `Unsloth + TRL SFTTrainer + train_on_responses_only` in a normal single-process launch. This works reliably on environments such as Colab with `1x T4`.
+- **Kaggle multi-GPU can fail even when single-GPU works.** On Kaggle, environments such as `2x T4` may enter a different Trainer execution path than `1x T4`, even when the code is unchanged. In practice, this can trigger failures during `trainer.train()` such as `'int' object has no attribute 'mean'`.
+- **Version pinning alone may not fix Kaggle multi-GPU issues.** Even with pinned `unsloth`, `transformers`, `trl`, and `peft` versions, Kaggle multi-GPU can still behave differently from local or Colab single-GPU runs because the runtime path is different.
+- **Kaggle P100 is not supported by newer PyTorch CUDA builds.** If Kaggle assigns a `Tesla P100`, newer stacks such as `torch 2.10.0 + cu128` can fail before training starts with errors like `CUDA error: no kernel image is available for execution on the device` or warnings that `sm_60` is not supported by the installed PyTorch build.
+
+Current recommendation:
+
+- Prefer single-GPU runs for this repository unless you are prepared to debug distributed training separately.
+- If Kaggle exposes multiple GPUs, treat multi-GPU behavior as experimental for this project.
+- Use a proper distributed launcher such as `accelerate launch` or `torchrun` instead of assuming that a normal `python scripts/train.py` run on a machine with multiple visible GPUs is equivalent.
+
+
+
 ## Evaluate
 The evaluation script compares the fine-tuned checkpoint against the base model on the validation split and reports both accuracies.
 

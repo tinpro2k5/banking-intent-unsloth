@@ -1,0 +1,57 @@
+# LOAD MODEL using Unsloth's FastLanguageModel, which simplifies loading and fine-tuning language models
+model_name: "unsloth/Qwen2.5-3B-Instruct-unsloth-bnb-4bit"
+max_seq_length: 256
+dtype: null  # Defaults to None; use torch.float16 or torch.bfloat16 for newer GPUs.
+load_in_4bit: True 
+# To enable full fine-tuning (FFT), set full_finetuning = True.
+
+
+# LORA HYPERPARAMETERS. W' = W + (α/r).(A @ B)
+lora_r: 8                            # Rank for LoRA. Adjust based on the model size and task complexity.
+target_modules: ["q_proj", "k_proj", "v_proj","o_proj", "gate_proj", "up_proj", "down_proj"]   # LoRA will be applied to these modules. Adjust based on the model architecture.
+lora_alpha: 16                        # scaling factor for LoRA, suggested to be  r*2 
+lora_dropout: 0                       # regularization by randomly setting a fraction of the LoRA activations to zero during each training step
+bias: "none"                          # Options: "none", "all", "lora_only"
+use_gradient_checkpointing: "unsloth" # True: regular PyTorch checkpointing, 
+use_rslora: true                      # α / r → α / sqrt(r).
+random_state: 3663
+loftq_config: null                    #LoFTQ initialization. Set to null to disable.
+
+
+chat_template: "qwen2.5"# Template for formatting input data. Adjust based on the model and task.
+
+# TRAINING ARGUMENTS
+batch_size: 3
+gradient_accumulation_steps: 6
+num_epochs: 3
+learning_rate: 2e-4
+optimizer: "adamw_8bit"
+save_strategy: "epoch" # epoch , steps, no
+eval_strategy: "epoch"
+save_total_limit: 3
+load_best_model_at_end: true # Whether to load the best model found or the last checkpoint at the end of training.
+metric_for_best_model: "eval_loss" # the smaller the better for eval_loss
+greater_is_better: false # How the framework interprets the metric_for_best_model
+logging_steps: 10
+weight_decay: 0.01    # regularization 
+warmup_steps: 50      # number of steps for the warmup phase of the learning rate scheduler
+lr_scheduler_type: "cosine" # learning rate scheduler type. Options include "linear", "cosine",...
+# EarlyStoppingCallback
+early_stopping_patience: 5 # Number of evaluation steps with no improvement after which training will be stopped. Set to None to disable early stopping.
+early_stopping_threshold: 0.0 # Minimum change in the monitored metric to qualify as an improvement. Set to 0.0 for any improvement.
+
+# DATA
+train_data: "train.csv"
+val_data: "val.csv"
+test_data: "test.csv"
+used_label_text_map: "used_label_text_map.json"
+
+
+# TRAIN ON RESPONSE ONLY
+instruction_part: "<|im_start|>user\n"
+response_part: "<|im_start|>assistant\n"
+
+
+
+label_text_map: "label_text_map.json"
+output_dir: "checkpoints"

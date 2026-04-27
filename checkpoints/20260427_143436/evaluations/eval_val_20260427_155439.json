@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-04-27T15:54:39.657648",
+  "run_context": {
+    "args": {
+      "config": "/content/banking-intent-unsloth/configs/train.yaml",
+      "split": "val",
+      "model_path": null,
+      "run_dir": null,
+      "best_from_run": false
+    },
+    "infer_cfg": {
+      "model_name": "unsloth/Qwen2.5-3B-Instruct-unsloth-bnb-4bit",
+      "max_seq_length": 256,
+      "dtype": null,
+      "load_in_4bit": true,
+      "lora_r": 8,
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "lora_alpha": 16,
+      "lora_dropout": 0,
+      "bias": "none",
+      "use_gradient_checkpointing": "unsloth",
+      "use_rslora": true,
+      "random_state": 3663,
+      "loftq_config": null,
+      "chat_template": "qwen2.5",
+      "batch_size": 3,
+      "gradient_accumulation_steps": 6,
+      "num_epochs": 3,
+      "learning_rate": "2e-4",
+      "optimizer": "adamw_8bit",
+      "save_strategy": "epoch",
+      "eval_strategy": "epoch",
+      "save_total_limit": 3,
+      "load_best_model_at_end": true,
+      "metric_for_best_model": "eval_loss",
+      "greater_is_better": false,
+      "logging_steps": 10,
+      "weight_decay": 0.01,
+      "warmup_steps": 50,
+      "lr_scheduler_type": "cosine",
+      "early_stopping_patience": 5,
+      "early_stopping_threshold": 0.0,
+      "train_data": "train.csv",
+      "val_data": "val.csv",
+      "test_data": "test.csv",
+      "used_label_text_map": "used_label_text_map.json",
+      "instruction_part": "<|im_start|>user\n",
+      "response_part": "<|im_start|>assistant\n",
+      "label_text_map": "label_text_map.json",
+      "output_dir": "checkpoints",
+      "base_model_max_seq_length": 512
+    },
+    "resolved": {
+      "data_file": "/content/banking-intent-unsloth/sample_data/val.csv",
+      "split": "val",
+      "n_samples": 1069,
+      "fine_tuned_model": "/content/banking-intent-unsloth/checkpoints/20260427_143436",
+      "base_model": "unsloth/Qwen2.5-3B-Instruct-unsloth-bnb-4bit",
+      "prompt_mode": {
+        "fine_tuned_use_base_prompt": false,
+        "base_use_base_prompt": true
+      },
+      "max_seq_length": {
+        "fine_tuned": 256,
+        "base": 512
+      }
+    }
+  },
+  "metrics": {
+    "fine_tuned_accuracy": 0.9476145930776426,
+    "base_accuracy": 0.49111318989710007,
+    "delta_ft_minus_base": 0.45650140318054255,
+    "fine_tuned_correct": 1013,
+    "base_correct": 525,
+    "timing_seconds": {
+      "fine_tuned": {
+        "elapsed_seconds": 581.3801,
+        "avg_seconds_per_sample": 0.543854
+      },
+      "base": {
+        "elapsed_seconds": 452.6937,
+        "avg_seconds_per_sample": 0.423474
+      }
+    }
+  }
+}

@@ -146,11 +146,18 @@ def resolve_model_path(args, infer_cfg) -> str:
             return str(maybe_local)
         return args.model_path
 
-    adapter_root = resolve_path(infer_cfg["adapter_path"])
+    # Fallback: if adapter_path exists, use it; otherwise use output_dir as parent
+    adapter_path = infer_cfg.get("adapter_path")
+    if not adapter_path:
+        adapter_path = infer_cfg.get("output_dir")
+    if not adapter_path:
+        raise ValueError("Config must have either 'adapter_path' or 'output_dir'")
+    
+    adapter_root = resolve_path(adapter_path)
     if not adapter_root.exists():
         raise FileNotFoundError(
             f"Adapter root not found: {adapter_root}. "
-            "Check configs/inference.yaml -> adapter_path"
+            "Check the evaluation config -> adapter_path/output_dir"
         )
 
     if args.run_dir:
@@ -164,7 +171,7 @@ def resolve_model_path(args, infer_cfg) -> str:
     if run_dir.name == "evaluations":
         raise ValueError(
             "Resolved run directory points to an evaluations folder, not a model folder. "
-            "Use --run-dir checkpoints/<timestamp> or set configs/inference.yaml -> adapter_path "
+            "Use --run-dir checkpoints/<timestamp> or set the evaluation config -> adapter_path/output_dir "
             "to a run directory containing adapter_config.json."
         )
 
@@ -393,8 +400,8 @@ def main():
     parser = argparse.ArgumentParser(description="Evaluate latest or specific LoRA checkpoint.")
     parser.add_argument(
         "--config",
-        default=str(CONFIG_DIR / "inference.yaml"),
-        help="Path to inference config yaml.",
+        default=str(CONFIG_DIR / "train.yaml"),
+        help="Path to evaluation config yaml.",
     )
     parser.add_argument(
         "--split",
@@ -434,9 +441,16 @@ def main():
         raise FileNotFoundError(f"Dataset split not found: {data_file}")
     df = pd.read_csv(data_file)
 
-    base_model_ref = infer_cfg["base_model"]
+    # Fallback: if base_model exists, use it; otherwise use model_name
+    base_model_ref = infer_cfg.get("base_model")
+    if not base_model_ref:
+        base_model_ref = infer_cfg.get("model_name")
+    if not base_model_ref:
+        raise ValueError("Config must have either 'base_model' or 'model_name'")
+    
     ft_max_seq_length = int(infer_cfg["max_seq_length"])
     base_max_seq_length = int(infer_cfg.get("base_model_max_seq_length", ft_max_seq_length))
+    max_new_tokens = int(infer_cfg.get("max_new_tokens", 16))
 
     print(f"[info] Evaluation split: {args.split} -> {data_file}")
     print(f"[info] Fine-tuned model: {ft_model_ref}")
@@ -444,7 +458,7 @@ def main():
     print(f"[info] Base model: {base_model_ref}")
     print(f"[info] max_seq_length (fine-tuned): {ft_max_seq_length}")
     print(f"[info] max_seq_length (base): {base_max_seq_length}")
-    print(f"[info] max_new_tokens: {infer_cfg['max_new_tokens']}")
+    print(f"[info] max_new_tokens: {max_new_tokens}")
 
     ft_use_base_prompt = False
     base_use_base_prompt = True
@@ -455,7 +469,7 @@ def main():
         ft_max_seq_length,
         df,
         id2label,
-        max_new_tokens=int(infer_cfg["max_new_tokens"]),
+        max_new_tokens=max_new_tokens,
         use_base_prompt=ft_use_base_prompt,
         allowed_labels=allowed_labels,
     )
@@ -466,7 +480,7 @@ def main():
         base_max_seq_length,
         df,
         id2label,
-        max_new_tokens=int(infer_cfg["max_new_tokens"]),
+        max_new_tokens=max_new_tokens,
         use_base_prompt=base_use_base_prompt,
         allowed_labels=allowed_labels,
     )

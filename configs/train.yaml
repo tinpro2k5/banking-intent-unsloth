@@ -7,9 +7,9 @@ load_in_4bit: True
 
 
 # LORA HYPERPARAMETERS. W' = W + (α/r).(A @ B)
-lora_r: 16                            # Rank for LoRA. Adjust based on the model size and task complexity.
+lora_r: 8                            # Rank for LoRA. Adjust based on the model size and task complexity.
 target_modules: ["q_proj", "k_proj", "v_proj","o_proj", "gate_proj", "up_proj", "down_proj"]   # LoRA will be applied to these modules. Adjust based on the model architecture.
-lora_alpha: 32                        # scaling factor for LoRA, suggested to be  r*2 
+lora_alpha: 16                        # scaling factor for LoRA, suggested to be  r*2 
 lora_dropout: 0                       # regularization by randomly setting a fraction of the LoRA activations to zero during each training step
 bias: "none"                          # Options: "none", "all", "lora_only"
 use_gradient_checkpointing: "unsloth" # True: regular PyTorch checkpointing, 

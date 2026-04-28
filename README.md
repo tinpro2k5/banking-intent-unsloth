@@ -8,7 +8,7 @@ pip install torch==2.7.1 torchvision torchaudio --index-url https://download.pyt
 pip install -r requirements.txt
 ```
 
-    Optional – Install memory-efficient attention (optional)
+    Optional - Install memory-efficient attention (optional)
 ```bash
 pip install xformers==0.0.27 --no-deps
 ```
@@ -225,5 +225,6 @@ During our experimentation phase, including an alternative fine-tuning configura
 
 
 ## Demo Video
-[Watch here](YOUR_GOOGLE_DRIVE_LINK)
-
+[Watch here](https://drive.google.com/file/d/1Joa3W-gg6plBBbLIG9c7Oc_nqlGrvLCO/view?usp=sharing)
+## Demo Notebook
+[Try here](https://colab.research.google.com/drive/1DHtTUhyKLZo38z4ajtRePHKmrDveQw-3?usp=sharing)

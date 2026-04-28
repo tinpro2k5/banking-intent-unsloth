@@ -42,7 +42,7 @@ def has_adapter_files(path: Path) -> bool:
 
 class IntentClassification:
     def __init__(self, model_path):
-        with open(model_path) as f:
+        with open(resolve_path(model_path)) as f:
             cfg = yaml.safe_load(f)
 
         adapter_path = resolve_path(cfg["adapter_path"])
@@ -108,9 +108,14 @@ class IntentClassification:
             skip_special_tokens=True
         )
         predicted_label = decoded.strip().split("\n")[0].strip()
-        if predicted_label not in self.valid_labels:
-            return "unknown_intent"
-        return predicted_label
+        # Exact match
+        if predicted_label in self.valid_labels:
+            return predicted_label
+        # Case-insensitive fallback (mirrors evaluate.py normalize_prediction_ft)
+        lut = {x.lower(): x for x in self.valid_labels}
+        if predicted_label.lower() in lut:
+            return lut[predicted_label.lower()]
+        return "unknown_intent"
 
 
 def parse_args():

@@ -55,3 +55,5 @@ response_part: "<|im_start|>assistant\n"
 
 label_text_map: "label_text_map.json"
 output_dir: "checkpoints"
+
+base_model_max_seq_length: 512      # For evaluation with system prompt + label subset list
